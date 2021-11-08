@@ -1,0 +1,9 @@
+{
+  "name": "rocketseat-nodejs",
+  "version": "1.0.0",
+  "description": "Projeto de aprendizado da roacketseat sobre nodejs.",
+  "main": "index.js",
+  "repository": "git@github.com:rodrigobaia/rocketseat-nodejs.git",
+  "author": "Rodrigo Vieira Baia <rodrigo@novasistemas.com.br>",
+  "license": "MIT"
+}
