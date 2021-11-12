@@ -1,7 +1,11 @@
-import axios from "axios";
+import axios from "axios"
+import prismaCliente from "../prisma"
+import {sign} from "jsonwebtoken"
+
 /**
  *  Recber o cde (string)
  *  Recuperar o access_token no github
+ *  Recuperar infors do user no github
  *  Verificar se o usuário existe no banco
  *      se ele existir gera um token
  *      se nao Cria o usuario e gera um token
@@ -10,11 +14,27 @@ import axios from "axios";
  * 
 **/
 
+interface IAccessTokenResponse{
+    access_token: string
+}
+
+interface IUserInfoResponse{
+    login: string,
+    id: number,    
+    avatar_url:  string,    
+    name: string,
+    company: string,
+    blog: string,
+    location: string,
+    email: string
+
+}
+
 class AuthenticateUserService{
     async execute(code: string){
         const url = "https://github.com/login/oauth/access_token";
 
-        const response = axios.post(url,null,{
+        const { data : accessTokenResponse } = await axios.post<IAccessTokenResponse>(url,null,{
             params:{
                 client_id:process.env.GITHUB_CLIENTE_ID,
                 client_secret:process.env.GITHUB_CLIENT_SECRET,
@@ -26,7 +46,51 @@ class AuthenticateUserService{
 
         });
 
-        return (await response).data;
+        const response = await axios.get<IUserInfoResponse>("https://api.github.com/user", {
+            headers:{
+                authorization: `Bearer ${accessTokenResponse.access_token}`
+            }
+        });
+
+        const { login, id, avatar_url, name, company, blog, location, email} = response.data;
+
+        let user = await prismaCliente.user.findFirst({
+            where:{
+                github_id: id
+            }
+        })
+
+        if(!user){
+            user = await prismaCliente.user.create({
+                    data:{
+                        avatar_url,
+                        blog,
+                        company,
+                        email,
+                        github_id: id,
+                        location,
+                        login,
+                        name
+                    }
+                })
+        }
+
+        const token = sign(
+            {
+                user:{
+                    name: user.name,
+                    avatar_url: user.avatar_url,
+                    id: user.id
+                }
+            },
+            process.env.JWT_SECRET,
+            {
+                subject: user.id,
+                expiresIn: "1d"
+            }
+        )
+
+        return {token, user};
     }
 }
 
