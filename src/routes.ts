@@ -3,8 +3,6 @@ import { AuthenticateUserController } from "./controllers/AuthenticateUserContro
 import {CreateMessageController} from  "./controllers/CreateMessageController"
 import {ensureAuthenticated} from "./middleware/ensureAuthenticated"
 
-
-
 const router = Router();
 
 router.post("/authenticate", new AuthenticateUserController().handle);

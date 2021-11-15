@@ -13,7 +13,7 @@ class AuthenticateUserController{
             return response.json(results);
         }
         catch(err){
-            return response.json(err.message);
+            return response.json({"erros": err.message});
         }
     }
 }
